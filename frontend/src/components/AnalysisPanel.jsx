@@ -99,13 +99,17 @@ const SectionHead = ({ icon: Icon, label, color = 'hsl(var(--accent-cyan))' }) =
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function AnalysisPanel({ user, report, onBack }) {
-  const reportData = report.analysis_result;
+  const reportData = report?.analysis_result || {};
+
+  // Guard: show error state if analysis result is missing or malformed
+  const hasData = reportData && (reportData.scan_type || reportData.findings || reportData.impression);
+
   const patientName = user?.full_name || reportData.patient_name || 'Patient';
-  const scanType = reportData.scan_type || 'Radiology Scan';
-  const studyName = reportData.study_name || scanType;
-  const seriesName = reportData.series_name || '—';
-  const studyDate = reportData.study_date || '—';
-  const reportDate = new Date(report.created_at || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+  const scanType    = reportData.scan_type  || 'Radiology Scan';
+  const studyName   = reportData.study_name || scanType;
+  const seriesName  = reportData.series_name || '—';
+  const studyDate   = reportData.study_date  || '—';
+  const reportDate  = new Date(report?.created_at || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
 
   // Tab: 'patient' | 'clinical'
   const [activeTab, setActiveTab] = useState('patient');
@@ -133,7 +137,7 @@ export default function AnalysisPanel({ user, report, onBack }) {
   }, [reportData.uploaded_image_base64]);
 
   // ── Fetch chat history ───────────────────────────────────────────────────
-  useEffect(() => { fetchChatHistory(); }, [report.id]);
+  useEffect(() => { if (report?.id) fetchChatHistory(); }, [report?.id]);
 
   // ── Redraw canvas on state change ────────────────────────────────────────
   useEffect(() => { drawMRI(); }, [activeFinding, zoom, pan]);
@@ -180,29 +184,56 @@ export default function AnalysisPanel({ user, report, onBack }) {
 
   // ── Canvas: draw highlights ──────────────────────────────────────────────
   const drawPatientHighlights = (ctx, w, h, activeF) => {
-    if (!reportData.findings) return;
-    reportData.findings.forEach((f, idx) => {
+    if (!findings.length) return;
+
+    findings.forEach((f, idx) => {
       if (!f.coordinates) return;
-      const rx = (f.coordinates.x / 100) * w;
-      const ry = (f.coordinates.y / 100) * h;
-      const rw = (f.coordinates.width / 100) * w;
-      const rh = (f.coordinates.height / 100) * h;
+
+      // Clamp all values to [0, 100] and enforce a minimum visible box size
+      const cx = Math.min(Math.max(f.coordinates.x || 0, 0), 95);
+      const cy = Math.min(Math.max(f.coordinates.y || 0, 0), 95);
+      const cw = Math.min(Math.max(f.coordinates.width  || 10, 5), 100 - cx);
+      const ch = Math.min(Math.max(f.coordinates.height || 10, 5), 100 - cy);
+
+      const rx = (cx / 100) * w;
+      const ry = (cy / 100) * h;
+      const rw = (cw / 100) * w;
+      const rh = (ch / 100) * h;
+
+      // Centre of the bounding box — used for the crosshair dot
+      const mx = rx + rw / 2;
+      const my = ry + rh / 2;
+
       const isActive = activeF === idx;
-      if (isActive) {
-        ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 3.5;
-        ctx.shadowColor = '#06b6d4'; ctx.shadowBlur = 20;
-        ctx.strokeRect(rx, ry, rw, rh); ctx.shadowBlur = 0;
-        ctx.fillStyle = 'rgba(6,182,212,0.22)'; ctx.fillRect(rx, ry, rw, rh);
-        ctx.fillStyle = '#06b6d4'; ctx.font = 'bold 11px Inter';
-        ctx.fillText(f.label.toUpperCase(), rx, ry - 7);
-      } else {
-        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
-        ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 8;
-        ctx.strokeRect(rx, ry, rw, rh); ctx.shadowBlur = 0;
-        ctx.fillStyle = 'rgba(239,68,68,0.1)'; ctx.fillRect(rx, ry, rw, rh);
-        ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px Inter';
-        ctx.fillText(f.label.toUpperCase(), rx, ry - 5);
-      }
+      const color    = isActive ? '#06b6d4' : '#ef4444';
+      const fillAlpha = isActive ? '38' : '1a'; // hex alpha
+
+      // Bounding rectangle
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = isActive ? 22 : 10;
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = isActive ? 3 : 1.5;
+      ctx.setLineDash(isActive ? [] : [5, 4]);
+      ctx.strokeRect(rx, ry, rw, rh);
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+
+      // Fill tint
+      ctx.fillStyle = color + fillAlpha;
+      ctx.fillRect(rx, ry, rw, rh);
+
+      // Crosshair dot at centre — helps when box is small
+      ctx.beginPath();
+      ctx.arc(mx, my, isActive ? 5 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Label — placed above box; clamp so it doesn't fall off the top edge
+      const labelY = ry > 18 ? ry - 7 : ry + rh + 14;
+      ctx.fillStyle = color;
+      ctx.font = `bold ${isActive ? 11 : 10}px Inter, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText((f.label || 'Finding').toUpperCase(), rx, labelY);
     });
   };
 
@@ -210,26 +241,45 @@ export default function AnalysisPanel({ user, report, onBack }) {
     const canvas = patientCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const w = canvas.width, h = canvas.height;
-    ctx.fillStyle = '#020206'; ctx.fillRect(0, 0, w, h);
-    const grad = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, w / 2);
-    grad.addColorStop(0, 'rgba(15,23,42,0.5)'); grad.addColorStop(1, 'rgba(0,0,0,0.9)');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
-    ctx.save(); ctx.translate(pan.x, pan.y); ctx.scale(zoom, zoom);
+
+    // Use the canvas's actual CSS display size for accurate pixel mapping
+    const rect   = canvas.getBoundingClientRect();
+    const dpr    = window.devicePixelRatio || 1;
+    // Only resize if necessary to avoid flicker
+    if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
+      canvas.width  = Math.round(rect.width  * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      ctx.scale(dpr, dpr);
+    }
+    const w = rect.width;
+    const h = rect.height;
+
+    ctx.fillStyle = '#020206';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(pan.x, pan.y);
+    ctx.scale(zoom, zoom);
+
     if (uploadedImageRef.current) {
       ctx.drawImage(uploadedImageRef.current, 0, 0, w, h);
       drawPatientHighlights(ctx, w, h, activeFinding);
     } else {
+      // Placeholder grid
       ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
       for (let i = 0; i < w; i += 40) {
         ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke();
       }
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '600 13px Inter'; ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '600 13px Inter, sans-serif';
+      ctx.textAlign = 'center';
       ctx.fillText('Scan Uploaded — Awaiting Render', w / 2, h / 2 - 10);
-      ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '11px Inter';
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '11px Inter, sans-serif';
       ctx.fillText('Markings overlay active on upload', w / 2, h / 2 + 15);
     }
+
     ctx.restore();
   };
 
@@ -242,7 +292,7 @@ export default function AnalysisPanel({ user, report, onBack }) {
     const updated = [...chatMessages, { role: 'user', content: userMsg }];
     setChatMessages(updated);
     try {
-      const res = await fetch('http://localhost:8000/api/chat', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ report_data: reportData, message_history: updated, new_message: userMsg })
@@ -267,14 +317,57 @@ export default function AnalysisPanel({ user, report, onBack }) {
   const handleChatSubmit = (e) => { e.preventDefault(); submitChat(); };
   const handleQuestionClick = (q) => { submitChat(q); };
 
-  // ── Data with fallbacks ──────────────────────────────────────────────────
-  const keyPoints = reportData.key_points || [];
-  const nextSteps = reportData.next_steps || reportData.recommendations || [];
-  const questionsToAsk = reportData.questions_to_ask || [];
-  const safetyNotes = reportData.safety_notes || [];
-  const findings = reportData.findings || [];
-  const impression = reportData.impression || [];
-  const recommendations = reportData.recommendations || [];
+  // ── Data with fallbacks — normalise every array and finding shape ───────
+  const keyPoints       = Array.isArray(reportData.key_points)       ? reportData.key_points       : [];
+  const nextSteps       = Array.isArray(reportData.next_steps)       ? reportData.next_steps       : Array.isArray(reportData.recommendations) ? reportData.recommendations : [];
+  const questionsToAsk  = Array.isArray(reportData.questions_to_ask) ? reportData.questions_to_ask : [];
+  const safetyNotes     = Array.isArray(reportData.safety_notes)     ? reportData.safety_notes     : [];
+  const impression      = Array.isArray(reportData.impression)       ? reportData.impression       : [];
+  const recommendations = Array.isArray(reportData.recommendations)  ? reportData.recommendations  : [];
+
+  // Normalise each finding so no field is ever null / undefined
+  const findings = (Array.isArray(reportData.findings) ? reportData.findings : [])
+    .filter(f => f && typeof f === 'object')
+    .map(f => ({
+      label:       f.label      || 'Finding',
+      category:    f.category   || '—',
+      details:     f.details    || '',
+      slices:      f.slices     || '—',
+      severity:    typeof f.severity   === 'number' ? f.severity   : 1,
+      confidence:  typeof f.confidence === 'number' ? f.confidence : 0,
+      views:       Array.isArray(f.views) ? f.views : (f.views ? [f.views] : []),
+      coordinates: f.coordinates && typeof f.coordinates === 'object' ? f.coordinates : null,
+    }));
+
+  // ── Error state — analysis data is missing or could not be parsed ────────
+  if (!hasData) {
+    return (
+      <div style={{ maxWidth: '600px', margin: '60px auto', padding: '0 24px' }}>
+        <button className="btn-secondary" onClick={onBack}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '28px', padding: '8px 14px', borderRadius: '10px' }}>
+          <ArrowLeft size={15} /> Back to Dashboard
+        </button>
+        <div style={{
+          borderRadius: '16px', border: '1px solid rgba(248,113,113,0.25)',
+          background: 'rgba(248,113,113,0.05)', padding: '36px 32px', textAlign: 'center'
+        }}>
+          <AlertCircle size={40} style={{ color: '#F87171', marginBottom: '16px' }} />
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#F0F0F0', marginBottom: '10px' }}>
+            Report data unavailable
+          </h2>
+          <p style={{ color: 'var(--text-2)', fontSize: '0.88rem', lineHeight: 1.7, marginBottom: '20px' }}>
+            The AI analysis result for this report is missing or could not be parsed.
+            This can happen if the scan analysis failed or returned an unexpected format.
+            Please go back and try uploading the scan again.
+          </p>
+          <button className="btn-primary" onClick={onBack}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 20px', fontSize: '0.88rem', borderRadius: '10px' }}>
+            <ArrowLeft size={14} /> Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -287,7 +380,7 @@ export default function AnalysisPanel({ user, report, onBack }) {
           <div><strong>Series:</strong> {seriesName}</div>
           <div><strong>Scan Date:</strong> {studyDate}</div>
           <div><strong>Report Date:</strong> {reportDate}</div>
-          <div><strong>Report ID:</strong> {report.id.substring(0, 8)}</div>
+          <div><strong>Report ID:</strong> {report.id?.substring(0, 8) ?? '—'}</div>
         </div>
       </div>
 
@@ -356,7 +449,7 @@ export default function AnalysisPanel({ user, report, onBack }) {
                 onTouchEnd={handleMouseUp} onWheel={handleWheel}
                 style={{ position: 'relative', width: '100%', aspectRatio: '1', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-glass)', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
               >
-                <canvas ref={patientCanvasRef} width={400} height={400} style={{ width: '100%', height: '100%', display: 'block' }} />
+                <canvas ref={patientCanvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
 
                 {/* Zoom controls */}
                 <div style={{ position: 'absolute', bottom: '8px', right: '8px', display: 'flex', gap: '4px', background: 'rgba(5,5,15,0.85)', backdropFilter: 'blur(4px)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
@@ -473,7 +566,7 @@ export default function AnalysisPanel({ user, report, onBack }) {
                             </div>
                           </div>
                           <p style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.8rem', lineHeight: '1.45', margin: 0 }}>
-                            {reportData.layman_explanation?.findings?.find(lf => lf.title?.toLowerCase().includes(f.label.split(' ')[0].toLowerCase()))?.explanation || f.details}
+                            {reportData.layman_explanation?.findings?.find(lf => lf.title?.toLowerCase().includes((f.label || '').split(' ')[0].toLowerCase()))?.explanation || f.details}
                           </p>
                           <div style={{ marginTop: '8px', display: 'flex', gap: '12px', fontSize: '0.72rem', color: 'hsl(var(--text-muted))' }}>
                             <span>Show on image · slice {f.slices}</span>
@@ -538,7 +631,7 @@ export default function AnalysisPanel({ user, report, onBack }) {
                       { label: 'Patient', val: patientName },
                       { label: 'Series', val: seriesName },
                       { label: 'Scan Date', val: studyDate },
-                      { label: 'Report ID', val: report.id.substring(0, 8) },
+                      { label: 'Report ID', val: report.id?.substring(0, 8) ?? '—' },
                     ].map(({ label, val }) => (
                       <div key={label} className="dicom-report-meta-card">
                         <dt>{label}</dt><dd>{val}</dd>

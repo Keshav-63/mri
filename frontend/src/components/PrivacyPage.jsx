@@ -16,7 +16,7 @@ const sections = [
   },
   {
     title: '4. Third-Party Services',
-    body: `We use Google's Gemini API to perform AI analysis of your scans. Your scan data is transmitted to Google's API under their data processing terms. We use Supabase for database and authentication infrastructure. We do not use advertising networks or analytics trackers.`,
+    body: `We use NVIDIA's inference API (running Google Gemma 3N) to perform AI analysis of your scans. Your scan data is transmitted to NVIDIA's API under their data processing terms. We use Supabase for database and authentication infrastructure. We do not use advertising networks or analytics trackers.`,
   },
   {
     title: '5. Data Security',

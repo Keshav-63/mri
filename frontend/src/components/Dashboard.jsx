@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, FileText, Trash2, Calendar, HardDrive, AlertTriangle, Brain, Activity, ChevronRight } from 'lucide-react';
+import ScanningLoader from './ScanningLoader';
 
 const Spinner = ({ size = 32 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
@@ -31,7 +32,7 @@ export default function Dashboard({ user, onSelectReport }) {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:8000/api/reports?user_id=${user.id}`);
+      const res = await fetch(`/api/reports?user_id=${user.id}`);
       if (!res.ok) throw new Error('Failed to fetch reports.');
       setReports(await res.json() || []);
     } catch { setUploadError('Could not reach the backend. Please check the server is running.'); }
@@ -52,7 +53,7 @@ export default function Dashboard({ user, onSelectReport }) {
     const form = new FormData();
     form.append('file', file); form.append('user_id', user.id);
     try {
-      const res = await fetch('http://localhost:8000/api/analyze', { method: 'POST', body: form });
+      const res = await fetch('/api/analyze', { method: 'POST', body: form });
       if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Analysis failed.'); }
       clearInterval(prog); setUploadPct(100);
       const created = await res.json();
@@ -65,7 +66,7 @@ export default function Dashboard({ user, onSelectReport }) {
     e.stopPropagation();
     if (!confirm('Delete this report?')) return;
     try {
-      await fetch(`http://localhost:8000/api/reports/${id}?user_id=${user.id}`, { method: 'DELETE' });
+      await fetch(`/api/reports/${id}?user_id=${user.id}`, { method: 'DELETE' });
       setReports(r => r.filter(x => x.id !== id));
     } catch (err) { alert('Delete failed: ' + err.message); }
   };
@@ -74,6 +75,8 @@ export default function Dashboard({ user, onSelectReport }) {
   const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   return (
+    <>
+    <ScanningLoader visible={uploading} progress={uploadPct} />
     <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '36px 24px' }} className="animate-fade-in">
 
       {/* ── Header ──────────────────────────────────── */}
@@ -129,16 +132,9 @@ export default function Dashboard({ user, onSelectReport }) {
               cursor: uploading ? 'wait' : 'pointer'
             }}>
             {uploading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', width: '100%' }}>
-                <Brain size={40} style={{ color: '#EBF542', animation: 'pulse-glow 1.5s infinite' }} />
-                <div>
-                  <h3 style={{ fontSize: '1rem', color: '#F0F0F0', fontWeight: '700', marginBottom: '4px' }}>AI Analysing Scan…</h3>
-                  <p style={{ color: 'var(--text-3)', fontSize: '0.78rem' }}>Processing structures, findings & generating report</p>
-                </div>
-                <div style={{ width: '100%', height: '3px', background: 'var(--border)', borderRadius: '9999px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${uploadPct}%`, background: '#EBF542', borderRadius: '9999px', transition: 'width 0.35s ease' }}/>
-                </div>
-                <span style={{ fontSize: '0.7rem', color: '#EBF542', fontWeight: '700' }}>{Math.round(uploadPct)}%</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <Brain size={32} style={{ color: '#EBF542', animation: 'pulse-glow 1.5s infinite' }} />
+                <p style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>Analysis in progress…</p>
               </div>
             ) : (
               <>
@@ -253,5 +249,6 @@ export default function Dashboard({ user, onSelectReport }) {
         </div>
       </div>
     </div>
+    </>
   );
 }

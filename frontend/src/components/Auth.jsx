@@ -3,7 +3,7 @@ import { Lock, Mail, User, ShieldAlert, CheckCircle, Brain, Eye, Activity, Zap }
 
 
 const features = [
-  { icon: Brain,    label: 'AI Radiology Analysis',  desc: 'Gemini 2.5 Flash reads MRI, CT & X-ray with specialist-level accuracy' },
+  { icon: Brain,    label: 'AI Radiology Analysis',  desc: 'Gemma 3N (via NVIDIA) reads MRI, CT & X-ray with specialist-level accuracy' },
   { icon: Eye,      label: 'Visual Finding Overlays', desc: 'Bounding boxes highlight every abnormality directly on your scan image' },
   { icon: Activity, label: 'Clinical + Patient View', desc: 'Dual-mode report: formal clinical findings and plain-English explanations' },
   { icon: Zap,      label: 'AI Chat Assistant',       desc: 'Ask any question about your report and get instant AI-powered answers' },
@@ -25,7 +25,7 @@ export default function Auth({ onAuthSuccess }) {
     const endpoint = isSignUp ? '/api/auth/signup' : '/api/auth/login';
     const payload  = isSignUp ? { email, password, full_name: fullName } : { email, password };
     try {
-      const res = await fetch(`http://localhost:8000${endpoint}`, {
+      const res = await fetch(endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
       if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Authentication failed.'); }
@@ -40,7 +40,7 @@ export default function Auth({ onAuthSuccess }) {
 
   const inputStyle = (field) => ({
     paddingLeft: '42px', height: '46px', fontSize: '0.88rem',
-    border: `1px solid ${focused === field ? '#EBF542' : 'var(--border)'}`,
+    border: `1px solid ${focused === field ? 'var(--accent)' : 'var(--border)'}`,
     boxShadow: focused === field ? '0 0 0 3px rgba(235,245,66,0.1)' : 'none',
     transition: 'all 0.2s ease', borderRadius: '10px',
     background: 'var(--bg-2)',
@@ -63,8 +63,8 @@ export default function Auth({ onAuthSuccess }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '44px' }}>
           <img src="/logo.png" alt="RadSight AI logo" width="54" height="54" />
           <div>
-            <div style={{ fontSize: '1.7rem', fontWeight: '800', fontFamily: 'Outfit', letterSpacing: '-0.04em', color: '#F0F0F0', lineHeight: 1 }}>
-              Rad<span style={{ color: '#EBF542' }}>Sight</span> AI
+            <div style={{ fontSize: '1.7rem', fontWeight: '800', fontFamily: 'Outfit', letterSpacing: '-0.04em', color: 'var(--text-1)', lineHeight: 1 }}>
+              Rad<span style={{ color: 'var(--accent)' }}>Sight</span> AI
             </div>
             <div style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-3)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: '4px' }}>
               Intelligent Radiology
@@ -72,9 +72,9 @@ export default function Auth({ onAuthSuccess }) {
           </div>
         </div>
 
-        <h1 style={{ fontSize: '2.2rem', lineHeight: 1.2, fontWeight: '800', fontFamily: 'Outfit', color: '#F0F0F0', marginBottom: '14px', letterSpacing: '-0.03em' }}>
+        <h1 style={{ fontSize: '2.2rem', lineHeight: 1.2, fontWeight: '800', fontFamily: 'Outfit', color: 'var(--text-1)', marginBottom: '14px', letterSpacing: '-0.03em' }}>
           Your scan,<br/>
-          <span style={{ color: '#EBF542' }}>decoded instantly.</span>
+          <span style={{ color: 'var(--accent)' }}>decoded instantly.</span>
         </h1>
         <p style={{ color: 'var(--text-2)', fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '40px', maxWidth: '360px' }}>
           Upload any MRI, CT, or X-ray and receive a specialist-grade clinical report with AI-powered explanations — in seconds, not days.
@@ -84,11 +84,11 @@ export default function Auth({ onAuthSuccess }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           {features.map(({ icon: Icon, label, desc }) => (
             <div key={label} style={{ display: 'flex', gap: '13px', alignItems: 'flex-start' }}>
-              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(235,245,66,0.08)', border: '1px solid rgba(235,245,66,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon size={15} style={{ color: '#EBF542' }} />
+              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'var(--accent-dim)', border: '1px solid var(--accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon size={15} style={{ color: 'var(--accent)' }} />
               </div>
               <div>
-                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#F0F0F0', marginBottom: '2px' }}>{label}</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-1)', marginBottom: '2px' }}>{label}</div>
                 <div style={{ fontSize: '0.76rem', color: 'var(--text-3)', lineHeight: 1.5 }}>{desc}</div>
               </div>
             </div>
@@ -96,10 +96,10 @@ export default function Auth({ onAuthSuccess }) {
         </div>
 
         {/* Powered by badge */}
-        <div style={{ marginTop: '40px', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', background: 'rgba(235,245,66,0.06)', border: '1px solid rgba(235,245,66,0.15)', width: 'fit-content' }}>
-          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#EBF542', animation: 'pulse-glow 2s infinite' }}/>
-          <span style={{ fontSize: '0.72rem', color: '#EBF542', fontWeight: '700', letterSpacing: '0.05em' }}>
-            Powered by Google Gemini 2.5 Flash
+        <div style={{ marginTop: '40px', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', background: 'var(--accent-dim)', border: '1px solid var(--accent-border)', width: 'fit-content' }}>
+          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', animation: 'pulse-glow 2s infinite' }}/>
+          <span style={{ fontSize: '0.72rem', color: 'var(--accent)', fontWeight: '700', letterSpacing: '0.05em' }}>
+            Powered by NVIDIA · Google Gemma 3N
           </span>
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function Auth({ onAuthSuccess }) {
               <button key={label} onClick={() => switchTab(val)}
                 style={{ flex: 1, padding: '9px', borderRadius: '9px', border: 'none', cursor: 'pointer',
                   fontFamily: 'Nunito Sans', fontWeight: '700', fontSize: '0.85rem', transition: 'all 0.2s ease',
-                  background: isSignUp === val ? '#EBF542' : 'transparent',
+                  background: isSignUp === val ? 'var(--accent)' : 'transparent',
                   color: isSignUp === val ? '#000' : 'var(--text-2)',
                 }}>
                 {label}
@@ -122,7 +122,7 @@ export default function Auth({ onAuthSuccess }) {
             ))}
           </div>
 
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', fontFamily: 'Outfit', color: '#F0F0F0', marginBottom: '4px', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', fontFamily: 'Outfit', color: 'var(--text-1)', marginBottom: '4px', letterSpacing: '-0.02em' }}>
             {isSignUp ? 'Create your account' : 'Welcome back'}
           </h2>
           <p style={{ color: 'var(--text-3)', fontSize: '0.83rem', marginBottom: '24px' }}>

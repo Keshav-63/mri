@@ -5,7 +5,7 @@ const pillars = [
   {
     icon: Brain,
     title: 'AI-Powered Analysis',
-    desc: 'Powered by Gemini 2.5 Flash, RadSight AI reads MRI, CT, and X-ray scans with specialist-level accuracy, surfacing findings in seconds.',
+    desc: 'Powered by Google Gemma 3N via NVIDIA, RadSight AI reads MRI, CT, and X-ray scans with specialist-level accuracy, surfacing findings in seconds.',
   },
   {
     icon: Eye,

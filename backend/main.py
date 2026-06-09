@@ -3,14 +3,15 @@ import logging
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 import bcrypt
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # Import our services
-from gemini_service import analyze_mri_file, get_chat_response, get_gemini_chat_stream
+from nvidia_service import analyze_mri_file, get_chat_response, get_nvidia_chat_stream
 from groq_service import get_groq_chat_stream
 
 # Load environment variables
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="AI-Integrated MRI Report Analyzer API",
-    description="Backend service with custom Auth (no JWT) and Gemini MRI analysis integration.",
+    description="Backend service with custom Auth (no JWT) and Gemma (NVIDIA) MRI analysis integration.",
     version="2.0.0"
 )
 
@@ -253,9 +254,9 @@ async def analyze_mri(
 
     try:
         file_bytes = await file.read()
-        logger.info(f"Analyzing {filename} ({len(file_bytes)} bytes) using Gemini...")
+        logger.info(f"Analyzing {filename} ({len(file_bytes)} bytes) using NVIDIA API...")
         
-        # Analyze using Gemini
+        # Analyze using NVIDIA Gemma
         report_result = analyze_mri_file(file_bytes, mime_type)
         
         # If it is a standard image, encode to base64 and store in result dictionary
@@ -308,46 +309,53 @@ async def chat_followup(request: ChatRequest):
         cleaned_report = clean_report_data(request.report_data)
 
         def unified_chat_stream():
-            use_gemini = False
+            groq_ok = False
             if os.getenv("GROQ_API_KEY"):
                 try:
-                    # Try streaming from Groq
                     for chunk in get_groq_chat_stream(
                         report_data=cleaned_report,
                         message_history=history,
                         new_message=request.new_message
                     ):
                         yield chunk
+                    groq_ok = True
                 except Exception as e:
-                    logger.warning(f"Groq streaming failed, falling back to Gemini: {e}")
-                    use_gemini = True
-            else:
-                use_gemini = True
+                    logger.warning(f"Groq streaming failed, falling back to NVIDIA: {e}")
 
-            if use_gemini:
+            if not groq_ok:
                 try:
-                    for chunk in get_gemini_chat_stream(
+                    for chunk in get_nvidia_chat_stream(
                         report_data=cleaned_report,
                         message_history=history,
                         new_message=request.new_message
                     ):
                         yield chunk
                 except Exception as e:
-                    logger.error(f"Gemini fallback chat streaming failed: {e}")
-                    yield f"\n\n[Assistant Error: Chat assistant is temporarily unavailable. Please verify API configuration.]"
+                    logger.error(f"NVIDIA fallback chat streaming failed: {e}")
+                    yield "\n\n[Assistant Error: Chat assistant is temporarily unavailable. Please verify API configuration.]"
 
         return StreamingResponse(unified_chat_stream(), media_type="text/plain")
     except Exception as e:
         logger.error(f"Error in chat streaming endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/")
-def read_root():
-    return {
-        "status": "online",
-        "custom_auth": True,
-        "supabase_connected": supabase_client is not None
-    }
+# ── Serve React build (production) ──────────────────────────────────────────
+_dist = os.path.join(os.path.dirname(__file__), "frontend", "dist")
+
+if os.path.isdir(_dist):
+    # Serve hashed JS/CSS assets with long cache headers
+    app.mount("/assets", StaticFiles(directory=os.path.join(_dist, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        candidate = os.path.join(_dist, full_path)
+        if full_path and os.path.isfile(candidate):
+            return FileResponse(candidate)
+        return FileResponse(os.path.join(_dist, "index.html"))
+else:
+    @app.get("/")
+    def read_root():
+        return {"status": "online", "supabase_connected": supabase_client is not None}
 
 if __name__ == "__main__":
     import uvicorn

@@ -7,10 +7,10 @@ import AboutPage from './components/AboutPage';
 import PrivacyPage from './components/PrivacyPage';
 import TermsPage from './components/TermsPage';
 import ContactPage from './components/ContactPage';
-import { Loader2, Sun, Moon, LogOut } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
 
 // ─── Shared Layout Shell (Header + Footer) ────────────────────────────────────
-function Shell({ user, onLogout, theme, toggleTheme, currentLang, handleLanguageChange, children }) {
+function Shell({ user, onLogout, currentLang, handleLanguageChange, children }) {
   return (
     <div>
       {/* Navigation Bar */}
@@ -32,8 +32,8 @@ function Shell({ user, onLogout, theme, toggleTheme, currentLang, handleLanguage
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             <img src="/logo.png" alt="RadSight AI logo" width="32" height="32" style={{ flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-              <span style={{ fontWeight: '800', fontSize: '1.18rem', fontFamily: 'Outfit', letterSpacing: '-0.03em', color: '#F0F0F0' }}>
-                Rad<span style={{ color: '#EBF542' }}>Sight</span>
+              <span style={{ fontWeight: '800', fontSize: '1.18rem', fontFamily: 'Outfit', letterSpacing: '-0.03em', color: 'var(--text-1)' }}>
+                Rad<span style={{ color: 'var(--accent)' }}>Sight</span>
               </span>
               <span style={{ fontSize: '0.58rem', fontWeight: '700', color: 'var(--text-3)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                 AI Radiology
@@ -44,6 +44,7 @@ function Shell({ user, onLogout, theme, toggleTheme, currentLang, handleLanguage
           {/* Centre nav links — sits in middle grid cell, always truly centred */}
           <nav style={{ display: 'flex', alignItems: 'center', gap: '2px', justifyContent: 'center' }} className="no-print">
             {[
+              ...(user ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
               { to: '/about',   label: 'About' },
               { to: '/contact', label: 'Contact' },
             ].map(({ to, label }) => (
@@ -81,18 +82,6 @@ function Shell({ user, onLogout, theme, toggleTheme, currentLang, handleLanguage
               <option value="ur">اردو (Urdu)</option>
             </select>
 
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              className="btn-secondary"
-              style={{ padding: '0', borderRadius: '9px', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {theme === 'dark'
-                ? <Sun size={15} style={{ color: '#EBF542' }} />
-                : <Moon size={15} style={{ color: 'var(--text-1)' }} />}
-            </button>
-
             {/* Sign Out — only when logged in */}
             {user && (
               <button
@@ -125,8 +114,8 @@ function Shell({ user, onLogout, theme, toggleTheme, currentLang, handleLanguage
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '28px', marginBottom: '28px' }}>
             {/* Brand */}
             <div>
-              <div style={{ fontWeight: '800', fontSize: '1rem', fontFamily: 'Outfit', color: '#F0F0F0', marginBottom: '6px' }}>
-                Rad<span style={{ color: '#EBF542' }}>Sight</span> AI
+              <div style={{ fontWeight: '800', fontSize: '1rem', fontFamily: 'Outfit', color: 'var(--text-1)', marginBottom: '6px' }}>
+                Rad<span style={{ color: 'var(--accent)' }}>Sight</span> AI
               </div>
               <p style={{ maxWidth: '260px', lineHeight: 1.7, color: 'var(--text-3)' }}>
                 AI-powered radiology analysis for patients, GPs, and clinics.
@@ -202,10 +191,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const [theme, setTheme] = useState(() =>
-    localStorage.getItem('radsight_theme') || 'dark'
-  );
-
   const [currentLang, setCurrentLang] = useState(() =>
     localStorage.getItem('radsight_language') || 'en'
   );
@@ -269,15 +254,6 @@ export default function App() {
     }
   }, []);
 
-  // Apply theme class
-  useEffect(() => {
-    if (theme === 'light') document.body.classList.add('light');
-    else document.body.classList.remove('light');
-    localStorage.setItem('radsight_theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-
   // ── Auth callbacks ───────────────────────────────────────────────────────
   const handleAuthSuccess = (userData) => {
     setUser(userData);
@@ -316,7 +292,7 @@ export default function App() {
     );
   }
 
-  const shellProps = { user, onLogout: handleLogout, theme, toggleTheme, currentLang, handleLanguageChange };
+  const shellProps = { user, onLogout: handleLogout, currentLang, handleLanguageChange };
 
   return (
     <Routes>
