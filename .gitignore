@@ -1,0 +1,70 @@
+# ---- Python / FastAPI ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.log
+
+# Virtual Environments
+.env
+.venv/
+venv/
+ENV/
+env.bak/
+env/
+
+# Databases / Runtime files
+*.db
+*.sqlite3
+instance/
+*.pid
+
+# Testing / Coverage
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# ---- React / Node.js ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnpm-lock.yaml
+
+# Build outputs
+build/
+dist/
+.cache/
+*.tsbuildinfo
+
+# ---- OS / IDE ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ---- Docker ----
+*.dockerfile
+docker-compose.override.yml
+.dockerignore
+
+# ---- Logs ----
+logs/
+*.log
+*.out
+*.err
+
+# ---- Misc ----
+*.bak
+*.tmp
+*.old

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <!-- 3D tube gradient for front strands (lighter center = highlight) -->
+    <linearGradient id="frontStrand" x1="80" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#8A9020"/>
+      <stop offset="35%"  stop-color="#EBF542"/>
+      <stop offset="65%"  stop-color="#EBF542"/>
+      <stop offset="100%" stop-color="#8A9020"/>
+    </linearGradient>
+    <linearGradient id="backStrand" x1="80" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#3A4010"/>
+      <stop offset="50%"  stop-color="#6A7820"/>
+      <stop offset="100%" stop-color="#3A4010"/>
+    </linearGradient>
+    <linearGradient id="rung1" x1="80" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6A7820"/>
+      <stop offset="50%"  stop-color="#EBF542"/>
+      <stop offset="100%" stop-color="#6A7820"/>
+    </linearGradient>
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+  </defs>
+
+  <!-- ── Dark pill background ── -->
+  <rect x="66" y="14" width="68" height="172" rx="34" fill="#0F0F0F"/>
+  <rect x="66" y="14" width="68" height="172" rx="34" fill="none" stroke="#EBF542" stroke-width="1" opacity="0.2"/>
+
+  <!-- Ambient glow behind helix -->
+  <rect x="78" y="22" width="44" height="156" rx="22" fill="#EBF542" opacity="0.04"/>
+
+  <!-- ══════════════════════════════════════════════════
+       HELIX: center x=100, strands at x=82 and x=118
+       y range: 28 → 175, 4 half-cycles, ht=36.75/cycle
+       Control point offset ≈ 20px
+       ══════════════════════════════════════════════════ -->
+
+  <!-- ── BACK segments (drawn first, darker) ── -->
+
+  <!-- Strand A back segs (left→right direction = behind) -->
+  <path d="M 82 65 C 82 85, 118 81, 118 102"
+        fill="none" stroke="url(#backStrand)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M 82 139 C 82 159, 118 155, 118 176"
+        fill="none" stroke="url(#backStrand)" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- Strand B back segs (right→left direction = behind) -->
+  <path d="M 118 65 C 118 85, 82 81, 82 102"
+        fill="none" stroke="url(#backStrand)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M 118 139 C 118 159, 82 155, 82 176"
+        fill="none" stroke="url(#backStrand)" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- ── CROSSBARS (middle layer) ── -->
+  <!-- Crossing y values ≈ 46, 83, 120, 157 -->
+  <rect x="82" y="42" width="36" height="7" rx="3.5" fill="url(#rung1)" opacity="0.65"/>
+  <rect x="82" y="80" width="36" height="7" rx="3.5" fill="url(#rung1)" opacity="0.90"/>
+  <rect x="82" y="118" width="36" height="7" rx="3.5" fill="url(#rung1)" opacity="0.65"/>
+  <rect x="82" y="154" width="36" height="7" rx="3.5" fill="url(#rung1)" opacity="0.90"/>
+
+  <!-- ── FRONT segments (drawn last, full lime) ── -->
+
+  <!-- Strand A front segs (right→left = in front) -->
+  <path d="M 118 28 C 118 48, 82 44, 82 65"
+        fill="none" stroke="url(#frontStrand)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M 118 102 C 118 122, 82 118, 82 139"
+        fill="none" stroke="url(#frontStrand)" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- Strand B front segs (left→right = in front) -->
+  <path d="M 82 28 C 82 48, 118 44, 118 65"
+        fill="none" stroke="url(#frontStrand)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M 82 102 C 82 122, 118 118, 118 139"
+        fill="none" stroke="url(#frontStrand)" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- ── Highlight (3D tube sheen) ── -->
+  <path d="M 118 28 C 118 48, 82 44, 82 65"
+        fill="none" stroke="#F8FC9F" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M 118 102 C 118 122, 82 118, 82 139"
+        fill="none" stroke="#F8FC9F" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M 82 28 C 82 48, 118 44, 118 65"
+        fill="none" stroke="#F8FC9F" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M 82 102 C 82 122, 118 118, 118 139"
+        fill="none" stroke="#F8FC9F" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- ── Endpoint dot caps ── -->
+  <circle cx="118" cy="28" r="6" fill="#EBF542"/>
+  <circle cx="82"  cy="28" r="6" fill="#EBF542"/>
+  <circle cx="82"  cy="176" r="6" fill="#6A7820"/>
+  <circle cx="118" cy="176" r="6" fill="#6A7820"/>
+
+  <!-- ── Corner tech marks ── -->
+  <path d="M 26 26 L 26 38 M 26 26 L 38 26" stroke="#2E2E2E" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 174 26 L 174 38 M 174 26 L 162 26" stroke="#2E2E2E" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 26 174 L 26 162 M 26 174 L 38 174" stroke="#EBF542" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+  <path d="M 174 174 L 174 162 M 174 174 L 162 174" stroke="#EBF542" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+</svg>
