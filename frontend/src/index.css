@@ -533,3 +533,111 @@ iframe.goog-te-banner-frame, #goog-gt-tt,
 body { top: 0 !important; }
 .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
 
+/* ── Responsive Header ─────────────────────────────────────────────────── */
+.header-inner {
+  padding: 0 24px;
+  height: 60px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--text-1);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: var(--ease);
+}
+.hamburger-btn:hover { background: var(--bg-3); border-color: var(--border-strong); }
+
+.mobile-nav {
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  background: var(--bg-2);
+  gap: 2px;
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .header-inner {
+    grid-template-columns: 1fr auto;
+    padding: 0 16px;
+    height: 56px;
+  }
+  .nav-center { display: none; }
+  .hamburger-btn { display: flex; }
+  .header-lang-select { display: none; }
+  .header-signout { display: none !important; }
+  .mobile-nav { display: flex; }
+}
+
+/* ── Responsive Auth Layout ─────────────────────────────────────────────── */
+.auth-layout {
+  display: flex;
+  min-height: 92vh;
+}
+
+.auth-hero {
+  flex: 1 1 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 50px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-2);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-form-side {
+  flex: 1 1 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 40px;
+  background: var(--bg-1);
+}
+
+@media (max-width: 768px) {
+  .auth-hero { display: none; }
+  .auth-form-side { padding: 32px 20px; min-height: 92vh; align-items: flex-start; padding-top: 48px; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .auth-hero { flex: 1 1 300px; padding: 40px 32px; }
+  .auth-form-side { flex: 1 1 300px; padding: 40px 32px; }
+}
+
+/* ── General mobile layout fixes ───────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Dashboard / pages — tighten horizontal padding */
+  .portal-container { padding: 12px; }
+
+  /* Footer links wrap nicely */
+  footer > div > div:first-child > div:last-child { gap: 24px !important; }
+
+  /* Analysis panel top nav wraps on tiny screens */
+  .portal-container > div:first-child { flex-wrap: wrap; gap: '10px'; }
+}
+

@@ -186,7 +186,7 @@ export default function ScanningLoader({ visible, progress }) {
 
           {/* Logo image */}
           <img
-            src="/logo.png"
+            src="/logo.svg"
             alt="RadSight AI"
             width={96}
             height={96}

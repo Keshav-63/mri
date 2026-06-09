@@ -10,7 +10,31 @@ import ContactPage from './components/ContactPage';
 import { Loader2, LogOut } from 'lucide-react';
 
 // ─── Shared Layout Shell (Header + Footer) ────────────────────────────────────
+const NAV_LINKS = (user) => [
+  ...(user ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
+];
+
+const LANG_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'hi', label: 'हिन्दी (Hindi)' },
+  { value: 'bn', label: 'বাংলা (Bengali)' },
+  { value: 'te', label: 'తెలుగు (Telugu)' },
+  { value: 'mr', label: 'मराठी (Marathi)' },
+  { value: 'ta', label: 'தமிழ் (Tamil)' },
+  { value: 'gu', label: 'ગુજરાતી (Gujarati)' },
+  { value: 'kn', label: 'ಕನ್ನಡ (Kannada)' },
+  { value: 'ml', label: 'മലയാളം (Malayalam)' },
+  { value: 'pa', label: 'ਪੰਜਾਬੀ (Punjabi)' },
+  { value: 'or', label: 'ଓଡ଼ିଆ (Odia)' },
+  { value: 'ur', label: 'اردو (Urdu)' },
+];
+
 function Shell({ user, onLogout, currentLang, handleLanguageChange, children }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const closeMenu = () => setMobileNavOpen(false);
+
   return (
     <div>
       {/* Navigation Bar */}
@@ -21,16 +45,10 @@ function Shell({ user, onLogout, currentLang, handleLanguageChange, children }) 
         top: 0,
         zIndex: 40
       }}>
-        <div style={{
-          padding: '0 24px',
-          height: '60px',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center',
-        }}>
+        <div className="header-inner">
           {/* Logo */}
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img src="/logo.png" alt="RadSight AI logo" width="32" height="32" style={{ flexShrink: 0 }} />
+            <img src="/logo.svg" alt="RadSight AI logo" width="32" height="32" style={{ flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
               <span style={{ fontWeight: '800', fontSize: '1.18rem', fontFamily: 'Outfit', letterSpacing: '-0.03em', color: 'var(--text-1)' }}>
                 Rad<span style={{ color: 'var(--accent)' }}>Sight</span>
@@ -41,13 +59,9 @@ function Shell({ user, onLogout, currentLang, handleLanguageChange, children }) 
             </div>
           </a>
 
-          {/* Centre nav links — sits in middle grid cell, always truly centred */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '2px', justifyContent: 'center' }} className="no-print">
-            {[
-              ...(user ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
-              { to: '/about',   label: 'About' },
-              { to: '/contact', label: 'Contact' },
-            ].map(({ to, label }) => (
+          {/* Centre nav links — desktop only */}
+          <nav className="nav-center no-print">
+            {NAV_LINKS(user).map(({ to, label }) => (
               <Link key={to} to={to} style={{
                 padding: '6px 12px', borderRadius: '8px', fontSize: '0.82rem',
                 fontWeight: '600', color: 'var(--text-2)', textDecoration: 'none',
@@ -59,42 +73,70 @@ function Shell({ user, onLogout, currentLang, handleLanguageChange, children }) 
             ))}
           </nav>
 
-          {/* Right controls — pushed to the right end of their grid cell */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
-            {/* Language selector */}
+          {/* Right controls */}
+          <div className="header-right">
+            {/* Language selector — hidden on mobile (moves to mobile nav) */}
             <select
               value={currentLang}
               onChange={(e) => handleLanguageChange(e.target.value)}
-              className="language-select no-print"
+              className="language-select no-print header-lang-select"
               title="Select Language"
             >
-              <option value="en">English</option>
-              <option value="hi">हिन्दी (Hindi)</option>
-              <option value="bn">বাংলা (Bengali)</option>
-              <option value="te">తెలుగు (Telugu)</option>
-              <option value="mr">मराठी (Marathi)</option>
-              <option value="ta">தமிழ் (Tamil)</option>
-              <option value="gu">ગુજરાતી (Gujarati)</option>
-              <option value="kn">ಕನ್ನಡ (Kannada)</option>
-              <option value="ml">മലയാളം (Malayalam)</option>
-              <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
-              <option value="or">ଓଡ଼ିଆ (Odia)</option>
-              <option value="ur">اردو (Urdu)</option>
+              {LANG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
 
-            {/* Sign Out — only when logged in */}
+            {/* Sign Out — only when logged in, desktop */}
             {user && (
               <button
                 onClick={onLogout}
-                className="btn-secondary no-print"
+                className="btn-secondary no-print header-signout"
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 13px', height: '34px', borderRadius: '9px', fontSize: '0.82rem', fontWeight: '600', flexShrink: 0, whiteSpace: 'nowrap' }}
               >
                 <LogOut size={14} />
                 Sign Out
               </button>
             )}
+
+            {/* Hamburger — mobile only */}
+            <button
+              className="hamburger-btn no-print"
+              onClick={() => setMobileNavOpen(o => !o)}
+              aria-label="Toggle navigation menu"
+            >
+              {mobileNavOpen
+                ? <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="16" y2="16"/><line x1="16" y1="2" x2="2" y2="16"/></svg>
+                : <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><rect y="3" width="18" height="2" rx="1"/><rect y="8" width="18" height="2" rx="1"/><rect y="13" width="18" height="2" rx="1"/></svg>
+              }
+            </button>
           </div>
         </div>
+
+        {/* Mobile nav dropdown */}
+        {mobileNavOpen && (
+          <div className="mobile-nav no-print">
+            {NAV_LINKS(user).map(({ to, label }) => (
+              <Link key={to} to={to} onClick={closeMenu}
+                style={{ padding: '10px 8px', fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-2)', textDecoration: 'none', borderRadius: '8px', display: 'block' }}
+              >{label}</Link>
+            ))}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <select
+                value={currentLang}
+                onChange={(e) => { handleLanguageChange(e.target.value); closeMenu(); }}
+                className="language-select"
+                style={{ width: '100%' }}
+              >
+                {LANG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              {user && (
+                <button onClick={() => { onLogout(); closeMenu(); }} className="btn-secondary"
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', height: '40px', fontSize: '0.88rem' }}>
+                  <LogOut size={14} /> Sign Out
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Page Content */}

@@ -47,21 +47,17 @@ export default function Auth({ onAuthSuccess }) {
   });
 
   return (
-    <div style={{ display: 'flex', minHeight: '92vh' }}>
+    <div className="auth-layout">
 
       {/* LEFT — Hero */}
-      <div style={{
-        flex: '1 1 400px', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        padding: '60px 50px', borderRight: '1px solid var(--border)',
-        background: 'var(--bg-2)', position: 'relative', overflow: 'hidden'
-      }}>
+      <div className="auth-hero">
         {/* Corner accents */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '120px', height: '120px', borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)', borderRadius: '0 0 100% 0', opacity: 0.4, pointerEvents: 'none' }}/>
         <div style={{ position: 'absolute', bottom: 0, right: 0, width: '120px', height: '120px', borderLeft: '1px solid var(--border)', borderTop: '1px solid var(--border)', borderRadius: '100% 0 0 0', opacity: 0.4, pointerEvents: 'none' }}/>
 
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '44px' }}>
-          <img src="/logo.png" alt="RadSight AI logo" width="54" height="54" />
+          <img src="/logo.svg" alt="RadSight AI logo" width="54" height="54" />
           <div>
             <div style={{ fontSize: '1.7rem', fontWeight: '800', fontFamily: 'Outfit', letterSpacing: '-0.04em', color: 'var(--text-1)', lineHeight: 1 }}>
               Rad<span style={{ color: 'var(--accent)' }}>Sight</span> AI
@@ -105,7 +101,7 @@ export default function Auth({ onAuthSuccess }) {
       </div>
 
       {/* RIGHT — Auth Form */}
-      <div style={{ flex: '1 1 340px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '50px 40px', background: 'var(--bg-1)' }}>
+      <div className="auth-form-side">
         <div className="animate-fade-in" style={{ width: '100%', maxWidth: '380px' }}>
 
           {/* Tab pills */}
